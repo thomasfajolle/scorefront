@@ -3,11 +3,11 @@
 
 <head>
   <meta charset="UTF-8" />
-  <title>FOOT ECM – Résultats</title>
+  <title>FOOT ECM – Classement</title>
   <link rel="stylesheet" href="assets/style.css" />
 </head>
 
-<body data-page="results">
+<body data-page="classement">
   <header>
     <h1>Championnat Ligue GE - FOOT ECM</h1>
     <nav>
@@ -20,32 +20,32 @@
   <main>
 
     <section class="card">
-      <h2>Résultats des matchs</h2>
-      <p>
-        Ci-dessous, la liste de tous les matchs présents dans la base
-        (table <code>match</code> sur MySQL / Aiven).
-      </p>
-
+      <h2>Classement</h2>
+      <p>Classement calculé à partir des matchs joués (victoire = 4 pts, nul = 2 pts, défaite = 1 pt).</p>
     </section>
 
     <section class="card">
       <table>
         <thead>
           <tr>
-            <th>Date</th>
-            <th>Domicile</th>
-            <th>Extérieur</th>
-            <th>Score</th>
-            <th>Statut</th>
+            <th>Rang</th>
+            <th>Équipe</th>
+            <th>J</th>
+            <th>Pts</th>
+            <th>BP</th>
+            <th>BC</th>
+            <th>Diff</th>
+            <th>Forme (5)</th>
           </tr>
         </thead>
-        <tbody id="matches-body">
-          <!-- Lignes générées en JavaScript -->
+        <tbody id="standings-body">
+          <!-- Rempli par JavaScript -->
         </tbody>
       </table>
     </section>
     <div id="error-message"></div>
   </main>
-  <script src="assets/main.js"></script>
+  <script src="assets/classement.js"></script>
 </body>
+
 </html>

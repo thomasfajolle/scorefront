@@ -121,3 +121,19 @@ th {
   font-weight: bold;
 
 }
+
+/* Forme récente: petit rond coloré pour W/D/L */
+.form-recent { display: flex; gap: 4px; }
+.form-chip {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  line-height: 18px;
+  text-align: center;
+  border-radius: 50%;
+  font-size: 11px;
+  color: white;
+}
+.form-w { background: #4caf50; }
+.form-d { background: #ffb300; }
+.form-l { background: #e53935; }
