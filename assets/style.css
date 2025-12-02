@@ -137,3 +137,16 @@ th {
 .form-w { background: #4caf50; }
 .form-d { background: #ffb300; }
 .form-l { background: #e53935; }
+
+/* Mini leaderboards layout */
+.mini-stats { display: flex; gap: 12px; }
+.mini-card { flex: 1; }
+.mini-card h3 { margin-top: 0; margin-bottom: 8px; }
+.mini-card ol { padding-left: 18px; margin: 0; }
+.mini-card li { margin-bottom: 6px; }
+
+/* Results page team filter */
+.team-filter { display:flex; gap:8px; align-items:center; margin-bottom:12px; }
+.team-filter input[type="search"] { flex:1; padding:6px 8px; border:1px solid #ccc; border-radius:4px; }
+.team-filter button { padding:6px 10px; border: none; background:#1e88e5; color:white; border-radius:4px; cursor:pointer; }
+.team-filter button:hover { background:#166fc1; }

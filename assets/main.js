@@ -37,6 +37,127 @@ function showError(message) {
   }
 
 }
+
+// Utilitaire : parse JSON safely (accepte déjà-objet ou string)
+function parseJSONField(field) {
+  if (!field) return [];
+  if (typeof field === 'object') return field;
+  try {
+    return JSON.parse(field);
+  } catch (e) {
+    console.warn('JSON parse error', e);
+    return [];
+  }
+}
+
+// Rend trois mini-classements : buteurs, passeurs, cartons
+// Filtre les matchs pour `team` (ex: 'Centrale Marseille') et affiche tous les joueurs
+function renderMiniLeaderboards(matches, team) {
+  try {
+    if (!matches || matches.length === 0) return;
+
+    // filtrer les matchs pour l'équipe demandée
+    const teamMatches = matches.filter(m => m.home_team === team || m.away_team === team);
+
+    const goals = new Map();
+    const assists = new Map();
+    const cards = new Map(); // player -> { yellow: n, red: n }
+
+    teamMatches.forEach(m => {
+      // scorers
+      const sh = parseJSONField(m.scorers_home);
+      const sa = parseJSONField(m.scorers_away);
+      sh.forEach(s => {
+        if (!s || !s.player) return;
+        const name = s.player;
+        goals.set(name, (goals.get(name) || 0) + 1);
+      });
+      sa.forEach(s => {
+        if (!s || !s.player) return;
+        const name = s.player;
+        goals.set(name, (goals.get(name) || 0) + 1);
+      });
+
+      // assists
+      const ah = parseJSONField(m.assists_home);
+      const aa = parseJSONField(m.assists_away);
+      ah.forEach(a => {
+        if (!a || !a.player) return;
+        const name = a.player;
+        assists.set(name, (assists.get(name) || 0) + 1);
+      });
+      aa.forEach(a => {
+        if (!a || !a.player) return;
+        const name = a.player;
+        assists.set(name, (assists.get(name) || 0) + 1);
+      });
+
+      // cards
+      const ch = parseJSONField(m.cards_home);
+      const ca = parseJSONField(m.cards_away);
+      const processCard = (c) => {
+        if (!c || !c.player) return;
+        const name = c.player;
+        const cur = cards.get(name) || { yellow: 0, red: 0 };
+        if (c.type === 'red') cur.red += 1;
+        else cur.yellow += 1;
+        cards.set(name, cur);
+      };
+      ch.forEach(processCard);
+      ca.forEach(processCard);
+    });
+
+    // Helper to render list (all players)
+    function renderListFromMap(map, containerId, label) {
+      const container = document.getElementById(containerId);
+      if (!container) return;
+      container.innerHTML = '';
+      const arr = Array.from(map.entries()).map(([player, count]) => ({ player, count }));
+      if (arr.length === 0) {
+        const li = document.createElement('li');
+        li.textContent = '—';
+        container.appendChild(li);
+        return;
+      }
+      arr.sort((a, b) => b.count - a.count || a.player.localeCompare(b.player));
+      arr.forEach(item => {
+        const li = document.createElement('li');
+        li.textContent = `${item.player} — ${item.count} ${label}`;
+        container.appendChild(li);
+      });
+    }
+
+    // Render goals and assists
+    renderListFromMap(goals, 'top-scorers', 'buts');
+    renderListFromMap(assists, 'top-assists', 'passes');
+
+    // Render cards (show yellow/red/total)
+    const cardsContainer = document.getElementById('top-cards');
+    if (cardsContainer) {
+      cardsContainer.innerHTML = '';
+      const arr = Array.from(cards.entries()).map(([player, obj]) => ({
+        player,
+        yellow: obj.yellow || 0,
+        red: obj.red || 0,
+        total: (obj.yellow || 0) + (obj.red || 0)
+      }));
+      if (arr.length === 0) {
+        const li = document.createElement('li');
+        li.textContent = '—';
+        cardsContainer.appendChild(li);
+      } else {
+        arr.sort((a, b) => b.total - a.total || b.red - a.red || a.player.localeCompare(b.player));
+        arr.forEach(it => {
+          const li = document.createElement('li');
+          li.textContent = `${it.player} — ${it.yellow} jaunes, ${it.red} rouges (${it.total})`;
+          cardsContainer.appendChild(li);
+        });
+      }
+    }
+  } catch (e) {
+    console.error('Erreur rendering leaderboards', e);
+  }
+}
 async function initHomePage() {
 
   try {
@@ -100,6 +221,10 @@ async function initHomePage() {
     }
 
     updateHomePage(nextMatch, lastMatch);
+    // render small leaderboards on homepage (filter for Centrale Marseille)
+    if (typeof renderMiniLeaderboards === 'function') {
+      renderMiniLeaderboards(matches, 'Centrale Marseille');
+    }
 
   } catch (error) {
 
@@ -184,7 +309,10 @@ async function initResultsPage() {
     }
 
     const matches = await response.json();
+    // render all initially
     renderMatchesTable(matches);
+    // setup team filter UI (live filter)
+    setupTeamFilter(matches);
 
   } catch (error) {
 
@@ -245,5 +373,44 @@ function renderMatchesTable(matches) {
 
   });
 
+}
+
+// Filtre les matchs par nom d'équipe (recherche insensible à la casse)
+function filterMatchesByTeam(matches, query) {
+  if (!query || query.trim() === '') return matches;
+  const q = query.trim().toLowerCase();
+  return matches.filter(m => {
+    const home = (m.home_team || '').toString().toLowerCase();
+    const away = (m.away_team || '').toString().toLowerCase();
+    return home.includes(q) || away.includes(q);
+  });
+}
+
+// Initialise les listeners pour la barre de recherche sur la page résultats
+function setupTeamFilter(matches) {
+  const input = document.getElementById('team-search');
+  const clearBtn = document.getElementById('team-clear');
+  if (!input) return;
+
+  let timeout = null;
+  const doFilter = () => {
+    const q = input.value || '';
+    const filtered = filterMatchesByTeam(matches, q);
+    renderMatchesTable(filtered);
+  };
+
+  input.addEventListener('input', () => {
+    // debounce 200ms
+    if (timeout) clearTimeout(timeout);
+    timeout = setTimeout(doFilter, 200);
+  });
+
+  if (clearBtn) {
+    clearBtn.addEventListener('click', () => {
+      input.value = '';
+      renderMatchesTable(matches);
+      input.focus();
+    });
+  }
 }
 
