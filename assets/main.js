@@ -356,6 +356,17 @@ function renderMatchesTable(matches) {
 
     if (match.home_score != null && match.away_score != null) {
       scoreTd.textContent = `${match.home_score} - ${match.away_score}`;
+      
+      // Color team names based on result
+      if (match.home_score > match.away_score) {
+        homeTd.style.color = '#10b981'; // green for winner
+        homeTd.style.fontWeight = '700';
+        awayTd.style.color = '#ef4444'; // red for loser
+      } else if (match.home_score < match.away_score) {
+        awayTd.style.color = '#10b981'; // green for winner
+        awayTd.style.fontWeight = '700';
+        homeTd.style.color = '#ef4444'; // red for loser
+      }
     } else {
       scoreTd.textContent = "—";
     }
