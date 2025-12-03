@@ -125,3 +125,15 @@ table tr:hover { background: #f1f5f9; }
   th, td { padding:10px 8px; }
 }
 
+/* Stadium cell: prevent very long names from breaking layout, show full on hover */
+.stadium-cell {
+  max-width: 240px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 600px) {
+  .stadium-cell { white-space: normal; }
+}
+

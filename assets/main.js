@@ -326,10 +326,21 @@ function renderMatchesTable(matches) {
   const tbody = document.getElementById("matches-body");
   tbody.innerHTML = ""; // on vide d'abord
 
+  // helper: find stadium-like field case-insensitively
+  function getStadiumFromMatch(m) {
+    if (!m) return '';
+    const keys = Object.keys(m || {});
+    const key = keys.find(k => {
+      const kk = k.toString().toLowerCase();
+      return kk === 'stade' || kk === 'stadium' || kk === 'venue' || kk === 'location' || kk === 'lieu' || kk === 'arena' || kk === 'ground';
+    });
+    return key ? (m[key] || '') : '';
+  }
+
   if (!matches || matches.length === 0) {
     const tr = document.createElement("tr");
     const td = document.createElement("td");
-    td.colSpan = 5;
+    td.colSpan = 6;
     td.textContent = "Aucun match trouvé dans la base.";
     tr.appendChild(td);
     tbody.appendChild(tr);
@@ -345,6 +356,13 @@ function renderMatchesTable(matches) {
 
     const dateTd = document.createElement("td");
     dateTd.textContent = formatMatchDate(match.match_date);
+
+    const stadiumTd = document.createElement("td");
+    // support several possible field names for the stadium
+    const stadium = getStadiumFromMatch(match);
+    stadiumTd.textContent = stadium || "—";
+    stadiumTd.classList.add('stadium-cell');
+    if (stadium) stadiumTd.title = stadium; // show full name on hover
 
     const homeTd = document.createElement("td");
     homeTd.textContent = match.home_team;
@@ -376,6 +394,7 @@ function renderMatchesTable(matches) {
     statusTd.textContent = match.status;
     statusTd.classList.add(`status-${match.status}`);
     tr.appendChild(dateTd);
+    tr.appendChild(stadiumTd);
     tr.appendChild(homeTd);
     tr.appendChild(awayTd);
     tr.appendChild(scoreTd);
